@@ -40,7 +40,19 @@ async function run() {
         const result = await studentCollections.find().toArray();
         res.send(result)
     })
-   
+    app.get('/students/:email', async(req, res)=>{
+        const email = req.params.email;
+        // console.log(email)
+        const query = {email: email};
+        const result = await studentCollections.findOne(query);
+        res.send(result);
+    })
+
+    app.post('/add-classes', async (req, res)=>{
+        const eachClass = req.body;
+        const result = await classCollections.insertOne(eachClass)
+        res.send(result);
+    })
     app.get('/classes', async(req, res)=>{
         const result = await classCollections.find().toArray();
         res.send(result)
