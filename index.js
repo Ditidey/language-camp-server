@@ -57,17 +57,7 @@ async function run() {
         const result = await classCollections.find().toArray();
         res.send(result)
     })
-    app.patch('/classes/:id', async(req,res)=>{
-        const id = req.params.id;
-        const infoRole = req.body;
-        // console.log(infoRole)
-        const query = {_id: new ObjectId(id)};
-        const updateClass = {
-            $set: {status: infoRole.status}
-        }
-        const result = await classCollections.updateOne(query, updateClass);
-        res.send(result)
-    })
+    
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
