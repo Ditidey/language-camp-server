@@ -57,6 +57,12 @@ async function run() {
         const result = await classCollections.find().toArray();
         res.send(result)
     })
+    app.get('/classes/:email', async(req, res)=>{
+       const email = req.params.email;
+       const query = {email: email};
+        const result = await classCollections.find(query).toArray();
+        res.send(result)
+    })
     app.patch('/classes/:id', async(req,res)=>{
         const id = req.params.id;
         const infoRole = req.body;
