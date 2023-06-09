@@ -23,6 +23,19 @@ async function run() {
     // await client.connect();
     const classCollections = client.db('global-language').collection('classes')
     const studentCollections = client.db('global-language').collection('students');
+    const selectedClassCollections = client.db('global-language').collection('selected-classes');
+
+    app.put('/selected-classes/:', async (req, res)=>{
+      const email = req.params.email;
+      const classInfo = req.body;
+      const query = { email: email };
+      const options = { upsert: true };
+      const updateInfo = {
+        $set: classInfo
+      }
+      const result = await selectedClassCollections.updateOne(query, updateInfo, options)
+      res.send(result) 
+    })
 
     app.put('/students/:email', async (req, res) => {
       const email = req.params.email;
