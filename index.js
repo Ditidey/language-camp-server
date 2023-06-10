@@ -2,10 +2,11 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
+const stripe = require('stripe')(process.env.PAYMENT_KEY);
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const stripe = require('stripe')(process.env.PAYMENT_KEY);
-// app.use(stripe)
+ 
+  
 app.use(express.json());
 app.use(cors())
 
@@ -94,7 +95,7 @@ async function run() {
       // if (req.query?.email) {
       //   query = { email: req.query.email }
       // }
-      console.log(req.query?.students)
+      // console.log(req.query?.students)
 
       const sortValue = {};
       const students = req.query?.students;
@@ -133,24 +134,24 @@ async function run() {
      
     // 
     app.post('/create-payment', async(req, res)=>{
-      const price = req.body;
-      const amount = parseFloat(price)*100;
-
+      const {price} = req.body;
+      const amount =  price*100;
+      console.log('price', price, typeof amount)
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
-        currency: 'Euro',
-        payment_method_types: 'card'
+        currency: 'usd',
+        payment_method_types: ['card']
       })
 
       res.send({
-        clientSecret: paymentIntent.client_secret,
-      });
+        clientSecret: paymentIntent.client_secret
+      })
     })
 
 
 
 
-    
+
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
