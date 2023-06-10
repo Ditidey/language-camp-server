@@ -26,6 +26,7 @@ async function run() {
     const classCollections = client.db('global-language').collection('classes')
     const studentCollections = client.db('global-language').collection('students');
     const selectedClassCollections = client.db('global-language').collection('selected-classes');
+    const  paymentCollections = client.db('global-language').collection('paid-classes');
 
     app.post('/selected-classes', async (req, res) => {
       const oneClass = req.body;
@@ -132,23 +133,33 @@ async function run() {
       res.send(result)
     })
      
-    // 
+    // payment method
     app.post('/create-payment', async(req, res)=>{
       const {price} = req.body;
       const amount =  price*100;
       console.log('price', price, typeof amount)
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: amount,
-        currency: 'usd',
-        payment_method_types: ['card']
-      })
-
-      res.send({
-        clientSecret: paymentIntent.client_secret
-      })
+       if(amount > 0){
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: 'usd',
+          payment_method_types: ['card']
+        })
+  
+        res.send({
+          clientSecret: paymentIntent.client_secret
+        })
+       }
     })
 
-
+    app.post('/payment', async(req, res)=>{
+      const payDetails = req.body;
+      const result = await paymentCollections.insertOne(payDetails);
+      res.send(result);
+    })
+    app.get('/get-payment', async(req, res)=>{
+      const result = await paymentCollections.find().toArray();
+      res.send(result);
+    })
 
 
 
