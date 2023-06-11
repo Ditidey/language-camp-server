@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 const stripe = require('stripe')(process.env.PAYMENT_KEY);
 const app = express();
@@ -9,6 +10,22 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
   
 app.use(express.json());
 app.use(cors())
+
+const verifyJwt = (req, res, next) => {
+  const authorization = req.headers.authorization;
+
+  if (!authorization) {
+    return res.status(401).send({ error: true, message: 'unauthorized' })
+  }
+  const token = authorization.split(' ')[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ error: true, message: 'unauthorized' })
+    }
+    req.decoded = decoded;
+    next();
+  })
+}
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.kos6m2u.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
@@ -27,6 +44,31 @@ async function run() {
     const studentCollections = client.db('global-language').collection('students');
     const selectedClassCollections = client.db('global-language').collection('selected-classes');
     const  paymentCollections = client.db('global-language').collection('paid-classes');
+    
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
+      res.send({ token })
+    })
+
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email }
+      const user = await studentCollections.findOne(query);
+      if (user?.status !== 'admin') {
+        return res.status(403).send({ error: true, message: 'forbidden message' });
+      }
+      next();
+    }
+    const verifyInstructor = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email }
+      const user = await studentCollections.findOne(query);
+      if (user?.status !== 'instructor') {
+        return res.status(403).send({ error: true, message: 'forbidden message' });
+      }
+      next();
+    }
 
     app.post('/selected-classes', async (req, res) => {
       const oneClass = req.body;
@@ -163,7 +205,7 @@ async function run() {
       const updatedResult = await classCollections.updateOne(updateQuery, {$inc: {students: 1, seat: -1}})
       res.send({result, deletedResult, updatedResult});
     })
-    
+
     app.get('/get-payment', async(req, res)=>{
       const email = req.query?.email;
       // console.log(email)
