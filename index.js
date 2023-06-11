@@ -137,7 +137,7 @@ async function run() {
     app.post('/create-payment', async(req, res)=>{
       const {price} = req.body;
       const amount =  price*100;
-      console.log('price', price, typeof amount)
+      // console.log('price', price, typeof amount)
        if(amount > 0){
         const paymentIntent = await stripe.paymentIntents.create({
           amount: amount,
@@ -154,11 +154,20 @@ async function run() {
     app.post('/payment', async(req, res)=>{
       const payDetails = req.body;
       const result = await paymentCollections.insertOne(payDetails);
-      res.send(result);
+
+      const query = {class_id: payDetails.class_id}
+      // console.log(query)
+      const deletedResult = await selectedClassCollections.deleteOne(query);
+      const updateQuery = {_id: new ObjectId(payDetails.class_id)};
+
+      const updatedResult = await classCollections.updateOne(updateQuery, {$inc: {students: 1, seat: -1}})
+      res.send({result, deletedResult, updatedResult});
     })
+    
     app.get('/get-payment', async(req, res)=>{
       const email = req.query?.email;
-      const query = {email: email}
+      // console.log(email)
+      const query = {student_email: email}
       const result = await paymentCollections.find(query).toArray();
       res.send(result);
     })
