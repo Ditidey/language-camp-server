@@ -200,8 +200,8 @@ async function run() {
       const query = {class_id: payDetails.class_id}
       // console.log(query)
       const deletedResult = await selectedClassCollections.deleteOne(query);
+      
       const updateQuery = {_id: new ObjectId(payDetails.class_id)};
-
       const updatedResult = await classCollections.updateOne(updateQuery, {$inc: {students: 1, seat: -1}})
       res.send({result, deletedResult, updatedResult});
     })
