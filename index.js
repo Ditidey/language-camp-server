@@ -192,7 +192,7 @@ async function run() {
         })
        }
     })
-
+// for payment post
     app.post('/payment', async(req, res)=>{
       const payDetails = req.body;
       const result = await paymentCollections.insertOne(payDetails);
